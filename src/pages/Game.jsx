@@ -73,11 +73,20 @@ const Game = ({ onGameEnd }) => {
         }
       },
       customClass: {
-        popup: 'bg-gray-800 text-white rounded-lg shadow-2xl',
-        confirmButton: 'bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded',
-        cancelButton: 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2',
-        input: 'bg-gray-700 border border-gray-600 text-white rounded-md p-2 w-full',
-        inputLabel: 'text-gray-300'
+        popup: 'bg-gray-800 text-white rounded-lg shadow-2xl !flex !flex-col !h-auto px-4 py-6',
+        confirmButton: 'flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded !m-0',
+        cancelButton: 'flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded !m-0',
+
+        // --- SIMPLIFIED THESE CLASSES ---
+        content: '!flex !flex-col !items-center !justify-center !w-full', // Removed !px-4 !py-4 here
+        inputLabel: 'text-gray-300 block text-center mt-4 mb-2',
+        input: 'bg-gray-700 border border-gray-600 text-white rounded-md w-full mx-auto', // Removed !px-4 !py-2 here
+        // --- END SIMPLIFIED CLASSES ---
+
+        container: 'swal2-container',
+        title: 'text-white text-center',
+        htmlContainer: 'text-center mb-4',
+        actions: 'flex flex-col sm:flex-row justify-center mt-6 w-full px-4 gap-4',
       },
       backdrop: `
         rgba(0,0,123,0.4)

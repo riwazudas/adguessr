@@ -1,0 +1,23 @@
+/* src/custom-sweetalert.css */
+
+/* Target the input field inside the SweetAlert2 popup */
+.swal2-popup .swal2-input {
+  padding-left: 1rem !important;  /* 1rem = 16px */
+  padding-right: 1rem !important; /* 1rem = 16px */
+  padding-top: 0.5rem !important;  /* 0.5rem = 8px */
+  padding-bottom: 0.5rem !important; /* 0.5rem = 8px */
+  /* If the text cursor or typed text is also touching, ensure box-sizing is border-box */
+  box-sizing: border-box !important;
+}
+
+/* Also ensure the entire content area has some padding */
+.swal2-popup .swal2-content {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* And ensure the actions (buttons) container has padding too */
+.swal2-popup .swal2-actions {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}

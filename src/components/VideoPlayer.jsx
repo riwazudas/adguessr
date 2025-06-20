@@ -105,7 +105,7 @@ const VideoPlayer = ({ youtubeId, startTime = 0, endTime, onEnded, isPlaying }) 
   // --- Cropping Dimensions ---
   // These values are approximate and may need slight adjustment based on
   // the exact embed proportions and how much of the title/logo is visible.
-  const cropTopPercentage = 8; // Percentage of player height to hide from the top (title/logo)
+  const cropTopPercentage = 25; // Percentage of player height to hide from the top (title/logo)
   const playerHeightScale = 100 + cropTopPercentage + 2; // Make player taller to compensate for top crop + a little extra for bottom controls
   const playerTopOffset = -(cropTopPercentage / 2 + 1); // Shift up by about half the cropped amount + a little extra
 
