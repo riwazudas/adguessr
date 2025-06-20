@@ -68,7 +68,7 @@ Steps:
 1. Clone the repository:
 ```bash
 
-git clone <your-repository-url>
+git clone [<your-repository-url>](https://github.com/riwazudas/adguessr.git)
 cd AdGuessr
 ```
 2. Install dependencies:
