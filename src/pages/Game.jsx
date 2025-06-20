@@ -269,7 +269,7 @@ const Game = ({ onGameEnd }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex flex-col items-center justify-center p-4">
       <h1 className="text-6xl font-extrabold text-white mb-8 drop-shadow-lg text-center">
-        <span className="text-purple-500">Ad</span>Venture <span className="text-yellow-400">Guess</span>
+        <span className="text-purple-500">Ad</span>Guessr
       </h1>
 
       <ScoreDisplay score={score} round={currentRound} />

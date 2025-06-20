@@ -33,7 +33,7 @@ const Home = () => {
       <footer className="absolute bottom-4 text-gray-500 text-sm">
         <p>&copy; 2025 AdGuessr Guess. All rights reserved.</p>
         {/* Placeholder for a custom logo image */}
-        {/* <img src="/path/to/your/logo.png" alt="AdGuessr Guess Logo" className="h-8 mx-auto mt-2" /> */}
+        <img src="logo-big.png" alt="AdGuessr Guess Logo" className="h-8 mx-auto mt-2" />
       </footer>
     </div>
   );
