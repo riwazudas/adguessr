@@ -14,15 +14,14 @@ AdGuessr is a fun and engaging web-based game where players test their knowledge
 9.  [Contributing](#9-contributing)
 
 ## 1. Features
-# -> ID: #1-features (or #features depending on parser, but usually the number is included)
 Interactive Gameplay: Watch short ad clips and guess the brand.
 Multiple Choice Questions: Select from a set of diverse options.
 Scoring System: Earn points for correct guesses.
 Global Leaderboard: Compete with other players worldwide.
 Responsive Design: Play seamlessly on various devices and screen sizes.
 Firebase Integration: Real-time data storage for videos and leaderboard.
+
 ## 2. How to Play
-# -> ID: #2-how-to-play
 Start the Game: Navigate to the game's homepage and click the "Play Game" button.
 Watch the Ad Clip: A short video clip of an advertisement will begin playing.
 Make Your Guess: Below the video, you will see a question and a set of multiple-choice options. Select the brand you believe is associated with the ad.
@@ -34,8 +33,8 @@ A new ad clip will load automatically for the next round.
 Game Over: The game continues for a set number of rounds or a time limit (depending on implementation). Once the game ends, your final score will be displayed.
 Submit to Leaderboard: You'll be prompted to enter your name to submit your score to the leaderboard.
 Play Again: You can choose to play another round or return to the home screen.
+
 ## 3. Leaderboard
-# -> ID: #3-leaderboard
 
 The leaderboard showcases the top 10 highest scores achieved by players.
 
@@ -46,7 +45,6 @@ Date: The date your score was submitted.
 Scores are ordered primarily by score (highest first) and then by timestamp (earliest first) for tie-breaking. This requires a specific composite index in Firestore for efficient querying.
 
 ## 4. Technology Stack
-# -> ID: #4-technology-stack
 
 #### Frontend:
 React: A JavaScript library for building user interfaces.
@@ -58,7 +56,6 @@ Firebase Firestore: A NoSQL cloud database for storing game data (videos, leader
 Firebase Authentication: (Optional, if implemented for admin access) For managing user accounts.
 
 ## 5. Setup and Installation (For Developers)
-# -> ID: #5-setup-and-installation-for-developers
 
 To get AdGuessr up and running on your local machine:
 
@@ -145,7 +142,6 @@ yarn dev
 The application will open in your browser, usually at http://localhost:5173.
 
 ## 6. Adding New Videos and Options (Content Management)
-# -> ID: #6-adding-new-videos-and-options-content-management
 
 AdGuessr currently fetches video data from a Firestore collection named videos. Each document in this collection represents an ad clip.
 
@@ -171,7 +167,6 @@ You can use the provided AddVideoForm.jsx component (or similar custom script) t
 Run your app and navigate to /add-video to use the form.
 
 ## 7. Firebase Security Rules
-# -> ID: #7-firebase-security-rules
 
 Firebase Security Rules control access to your Firestore database. It's critical to configure these correctly for your application's functionality and security.
 
@@ -179,7 +174,6 @@ Go to Firebase Console -> Firestore Database -> Rules tab.
 
 
 ## 8. Known Issues / Troubleshooting
-# -> ID: #8-known-issues--troubleshooting
 
 - "Failed to load leaderboard: The query requires an index.":
 Solution: This is expected. Firebase provides a direct link in your browser's console (F12 -> Console tab) to create the necessary composite index (on leaderboard collection, score DESC, timestamp ASC). Click the link and create the index. It may take a few minutes to build.
@@ -191,6 +185,5 @@ Solution: Check your Firebase Security Rules for the videos collection. Ensure a
 Solution: Ensure you have the src/custom-sweetalert.css file created and imported correctly (last in src/index.css or App.css). Clear your browser cache and perform a hard refresh (Ctrl+F5 or Cmd+Shift+R).
 
 ## 9. Contributing
-# -> ID: #9-contributing
 
 Contributions are welcome! If you have suggestions for improvements or find bugs, please open an issue or submit a pull request.
