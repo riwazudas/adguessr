@@ -1,29 +1,29 @@
-// src/App.jsx (Example temporary integration)
+// src/App.jsx
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+// REMOVE 'BrowserRouter as Router' from this import, you only need useNavigate, Route, Routes
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Game from './pages/Game';
 import Leaderboard from './pages/Leaderboard';
-import AddVideoForm from './components/AddVideoForm'; // <--- Import it
+import AddVideoForm from './components/AddVideoForm';
 
 function App() {
+  const navigate = useNavigate(); // This is correct here now because main.jsx provides the Router context
+
   const handleGameEnd = () => {
-    // Optionally navigate to leaderboard or home
-    // For simplicity, let's just log for now
-    console.log("Game ended!");
-    // You might want to use useNavigate hook here if this was a functional component
-    // history.push('/leaderboard'); // Example if you used useHistory
+    console.log("Game ended! Navigating to home.");
+    navigate('/');
   };
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/game" element={<Game onGameEnd={handleGameEnd} />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/add-video" element={<AddVideoForm />} /> {/* <--- New Route for your form */}
-      </Routes>
-    </Router>
+    // REMOVE THE <Router> TAGS HERE!
+    // The <Routes> component handles path matching within the Router context provided by main.jsx
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/game" element={<Game onGameEnd={handleGameEnd} />} />
+      <Route path="/leaderboard" element={<Leaderboard />} />
+      <Route path="/add-video" element={<AddVideoForm />} />
+    </Routes>
   );
 }
 

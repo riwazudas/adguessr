@@ -53,8 +53,16 @@ const Game = ({ onGameEnd }) => {
 
 
   const endGame = useCallback(async () => {
+
+    if (gameEnded) {
+      console.log("endGame: Game already ended, preventing redundant call.");
+      return;
+    }
+
     setGameEnded(true);
     setIsTimerRunning(false);
+    console.log("endGame: GameEnded set to true, isTimerRunning set to false.");
+
 
     Swal.fire({
       title: 'Game Over!',
@@ -62,7 +70,7 @@ const Game = ({ onGameEnd }) => {
       icon: 'success',
       confirmButtonText: 'Submit Score',
       showCancelButton: true,
-      cancelButtonText: 'Play Again',
+      cancelButtonText: 'Back to Home',
       input: 'text',
       inputLabel: 'Enter your name for the leaderboard:',
       inputPlaceholder: 'Anonymous',
@@ -113,17 +121,20 @@ const Game = ({ onGameEnd }) => {
             }
           }).then(() => {
             onGameEnd();
+            console.log("Swal: Score submitted, onGameEnd called (App.jsx handles navigation).");
           });
         } catch (error) {
           console.error("Error submitting score:", error);
           Swal.fire('Error', 'Failed to submit score.', 'error');
           onGameEnd();
+          console.log("Swal: Score submission failed, onGameEnd called.");
         }
       } else if (result.dismiss === Swal.DismissReason.cancel) {
+        console.log("Swal: 'Back to Home' clicked, calling onGameEnd.");
         onGameEnd();
       }
     });
-  }, [score, onGameEnd]);
+  }, [score, onGameEnd, gameEnded]);
 
 
   const handleRoundEndDueToTime = useCallback(() => {
