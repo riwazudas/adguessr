@@ -33,7 +33,7 @@ const Leaderboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex flex-col items-center p-4">
       <h1 className="text-6xl font-extrabold text-white mb-8 drop-shadow-lg text-center">
-        <span className="text-purple-500">Ad</span>Venture <span className="text-yellow-400">Leaderboard</span>
+        <span className="text-purple-500">Ad</span>Guessr <span className="text-yellow-400">Leaderboard</span>
       </h1>
 
       <Link to="/" className="mb-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
