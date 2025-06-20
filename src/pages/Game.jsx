@@ -1,6 +1,6 @@
 // src/pages/Game.jsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, addDoc, query, orderBy, limit } from 'firebase/firestore';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../firebase-config';
 import VideoPlayer from '../components/VideoPlayer';
 import GuessingArea from '../components/GuessingArea';
@@ -8,25 +8,23 @@ import Timer from '../components/Timer';
 import ScoreDisplay from '../components/ScoreDisplay';
 import Swal from 'sweetalert2';
 
-const MAX_ROUNDS = 10;
-const INITIAL_VIDEO_DURATION = 15; // First snippet duration
-const HINT_VIDEO_DURATION = 10; // Additional snippet duration
-const GUESSING_TIME_INITIAL = 15; // Time for first guess
-const GUESSING_TIME_HINT = 10; // Time for subsequent guesses
+const MAX_ROUNDS_CEILING = 10; // This is now the maximum possible, but game plays for available videos
+const BASE_POINTS_CORRECT = 500;
+const POINTS_PER_SECOND_LEFT = 10;
+const MAX_GUESS_TIME_PER_ROUND = 45;
 
 const Game = ({ onGameEnd }) => {
   const [videos, setVideos] = useState([]);
   const [currentRound, setCurrentRound] = useState(1);
   const [currentVideo, setCurrentVideo] = useState(null);
-  const [videoStage, setVideoStage] = useState(0); // 0: initial (15s), 1: first hint (25s total), 2: second hint (35s total)
   const [score, setScore] = useState(0);
   const [gameEnded, setGameEnded] = useState(false);
-  const [isGuessingPhase, setIsGuessingPhase] = useState(false); // To control timer and guess area visibility
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [timerInitialValue, setTimerInitialValue] = useState(GUESSING_TIME_INITIAL);
+  const [timerInitialValue, setTimerInitialValue] = useState(MAX_GUESS_TIME_PER_ROUND);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Function to shuffle an array (Fisher-Yates) for random video order
+  const timerRef = useRef(null);
+
   const shuffleArray = useCallback((array) => {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -35,27 +33,28 @@ const Game = ({ onGameEnd }) => {
     return array;
   }, []);
 
-  // --- Callback functions (startNewRound, endGame, handleGuess, handleTimerTimeout, handleVideoSnippetEnded) ---
-  // Define these before the useEffect that calls them
   const startNewRound = useCallback(() => {
-    if (videos.length === 0 || currentRound > MAX_ROUNDS) {
-      return;
-    }
+    // Only attempt to start a new round if there are videos available for the current round
+    // The main useEffect will handle ending the game if currentRound > videos.length
     const videoIndex = currentRound - 1;
     if (videoIndex < videos.length) {
       setCurrentVideo(videos[videoIndex]);
-      setVideoStage(0); // Reset video stage for new round
-      setIsGuessingPhase(false); // Video plays first
-      setIsTimerRunning(false); // Timer is not running initially
-      setTimerInitialValue(GUESSING_TIME_INITIAL); // Reset timer value for the first guess phase
+      setIsTimerRunning(true);
+      setTimerInitialValue(MAX_GUESS_TIME_PER_ROUND);
+      console.log(`Game: Starting Round ${currentRound}. Video ID: ${videos[videoIndex].youtubeId}`);
+      console.log(`Game: isTimerRunning set to TRUE.`);
+      console.log(`Game: Timer initial value set to ${MAX_GUESS_TIME_PER_ROUND}.`);
+    } else {
+        // This case should now be caught by the useEffect that calls endGame
+        // if (currentRound > videos.length)
+        console.log(`Game: No more videos for round ${currentRound}. Preparing to end game.`);
     }
-  }, [videos, currentRound, MAX_ROUNDS]);
+  }, [videos, currentRound]);
 
 
   const endGame = useCallback(async () => {
     setGameEnded(true);
     setIsTimerRunning(false);
-    setIsGuessingPhase(false);
 
     Swal.fire({
       title: 'Game Over!',
@@ -80,7 +79,6 @@ const Game = ({ onGameEnd }) => {
         input: 'bg-gray-700 border border-gray-600 text-white rounded-md p-2 w-full',
         inputLabel: 'text-gray-300'
       },
-      // This Nyan Cat gif won't work unless you put it in the public folder!
       backdrop: `
         rgba(0,0,123,0.4)
         url("/nyan-cat.gif")
@@ -119,37 +117,38 @@ const Game = ({ onGameEnd }) => {
   }, [score, onGameEnd]);
 
 
-  const handleVideoSnippetEnded = useCallback(() => {
+  const handleRoundEndDueToTime = useCallback(() => {
     if (gameEnded || !currentVideo) return;
 
-    setIsGuessingPhase(true); // Start guessing phase
-    setIsTimerRunning(true); // Start timer
+    setIsTimerRunning(false);
 
-    if (videoStage === 0) {
-      setTimerInitialValue(GUESSING_TIME_INITIAL);
-    } else {
-      setTimerInitialValue(GUESSING_TIME_HINT);
-    }
-  }, [currentVideo, gameEnded, videoStage]);
+    Swal.fire({
+      title: 'Time Up!',
+      html: `The correct answer was: <span class="font-bold text-green-400">${currentVideo.answer}</span>`,
+      icon: 'info',
+      confirmButtonText: 'Next Round',
+      customClass: {
+        popup: 'bg-gray-800 text-white rounded-lg shadow-2xl',
+        confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded',
+      }
+    }).then(() => {
+      setCurrentRound((prevRound) => prevRound + 1);
+    });
+  }, [currentVideo, gameEnded]);
 
 
   const handleGuess = useCallback((guess) => {
-    if (gameEnded || !currentVideo || !isGuessingPhase) return;
+    if (gameEnded || !currentVideo) return;
 
-    setIsTimerRunning(false); // Stop timer immediately on guess
-    setIsGuessingPhase(false); // Disable guessing area
+    setIsTimerRunning(false);
+
+    const timeLeft = timerRef.current ? timerRef.current.getTimeLeft() : 0;
+    console.log(`Guess made: "${guess}". Time Left: ${timeLeft}s`);
 
     if (guess === currentVideo.answer) {
-      let points = 0;
-      const timeBonus = timerInitialValue; // Simple bonus: uses initial time for the stage
+      const timeBonus = Math.max(0, timeLeft);
+      const points = BASE_POINTS_CORRECT + timeBonus * POINTS_PER_SECOND_LEFT;
 
-      if (videoStage === 0) { // Guessed after 15s video
-        points = 200 + timeBonus;
-      } else if (videoStage === 1) { // Guessed after 25s video
-        points = 100 + timeBonus;
-      } else if (videoStage === 2) { // Guessed after 35s video
-        points = 50 + timeBonus;
-      }
       setScore((prevScore) => prevScore + points);
       Swal.fire({
         title: 'Correct!',
@@ -177,33 +176,8 @@ const Game = ({ onGameEnd }) => {
         setCurrentRound((prevRound) => prevRound + 1);
       });
     }
-  }, [currentVideo, isGuessingPhase, videoStage, timerInitialValue, gameEnded]);
+  }, [currentVideo, gameEnded, BASE_POINTS_CORRECT, POINTS_PER_SECOND_LEFT]);
 
-
-  const handleTimerTimeout = useCallback(() => {
-    if (gameEnded || !currentVideo) return;
-
-    setIsTimerRunning(false); // Stop timer
-    setIsGuessingPhase(false); // Disable guessing area
-
-    if (videoStage < 2) { // If there are more hints to give (max 2 hints after initial)
-      setVideoStage((prevStage) => prevStage + 1); // Move to next video stage (e.g., 0 to 1, or 1 to 2)
-      // The video will now play the next segment
-    } else { // No more hints, 45 seconds of video are up, or final guess timed out
-      Swal.fire({
-        title: 'Time Up!',
-        html: `The correct answer was: <span class="font-bold text-green-400">${currentVideo.answer}</span>`,
-        icon: 'info',
-        confirmButtonText: 'Next Round',
-        customClass: {
-          popup: 'bg-gray-800 text-white rounded-lg shadow-2xl',
-          confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded',
-        }
-      }).then(() => {
-        setCurrentRound((prevRound) => prevRound + 1); // Advance to the next round
-      });
-    }
-  }, [videoStage, currentVideo, gameEnded]);
 
   // --- Effects ---
 
@@ -219,36 +193,54 @@ const Game = ({ onGameEnd }) => {
           video.youtubeId &&
           video.answer &&
           Array.isArray(video.options) && video.options.length === 5 &&
-          video.options.includes(video.answer)
+          video.options.includes(video.answer) &&
+          typeof video.startTime === 'number'
         );
 
-        if (validVideos.length < MAX_ROUNDS) {
+        console.log("Fetched and filtered videos:", validVideos.length, "valid videos found.");
+
+        if (validVideos.length === 0) {
           Swal.fire({
-            title: 'Not Enough Videos!',
-            text: `You only have ${validVideos.length} valid videos in Firestore. Please add at least ${MAX_ROUNDS} for a full game.`,
-            icon: 'warning',
-            confirmButtonText: 'Understood'
+            title: 'No Videos Found!',
+            text: 'There are no valid videos in your Firestore database. Please add some to play the game.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+          // Set gameEnded to true to prevent game from trying to start with no videos
+          setGameEnded(true);
+        } else if (validVideos.length < MAX_ROUNDS_CEILING) {
+          Swal.fire({
+            title: 'Fewer Videos Than Max Rounds!',
+            text: `You have ${validVideos.length} valid videos. The game will play for ${validVideos.length} rounds instead of the maximum ${MAX_ROUNDS_CEILING}.`,
+            icon: 'info',
+            confirmButtonText: 'Got It!'
           });
         }
-        setVideos(shuffleArray(validVideos)); // Shuffle and set valid videos
+        setVideos(shuffleArray(validVideos));
       } catch (error) {
         console.error("Error fetching videos:", error);
         Swal.fire('Error', 'Failed to load videos. Please check your internet connection or Firebase setup.', 'error');
+        setGameEnded(true); // End game on fetch error as well
       } finally {
         setIsLoading(false);
       }
     };
     fetchVideos();
-  }, [shuffleArray]); // Added shuffleArray to dependencies
+  }, [shuffleArray]);
 
   // Effect to manage game flow (start new round or end game)
-  // This useEffect now correctly calls startNewRound and endGame after they're defined.
   useEffect(() => {
     if (isLoading || gameEnded) return;
 
-    if (videos.length > 0 && currentRound <= MAX_ROUNDS) {
+    // The game will run for 'videos.length' rounds.
+    // If currentRound exceeds the number of available videos, end the game.
+    if (videos.length > 0 && currentRound <= videos.length) {
       startNewRound();
-    } else if (currentRound > MAX_ROUNDS) {
+    } else if (currentRound > videos.length && videos.length > 0) { // Ensure videos were actually loaded
+      endGame();
+    } else if (videos.length === 0 && !isLoading) {
+      // If no videos were loaded at all (and not loading), ensure game ends.
+      // This is mostly a fallback if the fetchVideos didn't set gameEnded for some reason.
       endGame();
     }
   }, [videos, currentRound, isLoading, gameEnded, startNewRound, endGame]);
@@ -257,28 +249,13 @@ const Game = ({ onGameEnd }) => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
-        <p className="text-white text-3xl animate-pulse">Loading AdVenture Guess...</p>
+        <p className="text-white text-3xl animate-pulse">Loading AdGuessr...</p>
       </div>
     );
   }
 
-  // Calculate the actual start time for the *current* video snippet being played
-  let videoSegmentStartTime = (currentVideo?.startTime || 0); // Base start time from Firestore
-
-  if (videoStage === 1) {
-    videoSegmentStartTime += INITIAL_VIDEO_DURATION; // Start after the first 15s
-  } else if (videoStage === 2) {
-    videoSegmentStartTime += INITIAL_VIDEO_DURATION + HINT_VIDEO_DURATION; // Start after the first 25s
-  }
-
-  // Calculate the end time of the current snippet (relative to its start)
-  let videoSegmentDuration = INITIAL_VIDEO_DURATION;
-  if (videoStage === 1 || videoStage === 2) {
-    videoSegmentDuration = HINT_VIDEO_DURATION;
-  }
-  const videoEndTime = videoSegmentStartTime + videoSegmentDuration;
-
-  const shouldVideoPlay = !isGuessingPhase && !gameEnded;
+  const videoPlayerStartTime = currentVideo?.startTime || 0;
+  const videoPlayerEndTime = videoPlayerStartTime + MAX_GUESS_TIME_PER_ROUND;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex flex-col items-center justify-center p-4">
@@ -292,37 +269,31 @@ const Game = ({ onGameEnd }) => {
         {currentVideo && (
           <VideoPlayer
             youtubeId={currentVideo.youtubeId}
-            startTime={videoSegmentStartTime} // Pass the dynamically calculated start time
-            endTime={videoEndTime}
-            onEnded={handleVideoSnippetEnded}
-            isPlaying={shouldVideoPlay}
-            // This key will force the VideoPlayer component to re-mount (reset)
-            // every time the youtubeId (new video) or the videoStage (new segment within same video) changes.
-            key={`round-${currentRound}-${currentVideo.youtubeId}-${videoStage}`}
+            startTime={videoPlayerStartTime}
+            endTime={videoPlayerEndTime}
+            onEnded={handleRoundEndDueToTime}
+            isPlaying={!gameEnded}
+            key={`round-${currentRound}-${currentVideo.youtubeId}`}
           />
         )}
       </div>
 
       <div className="mt-8 flex flex-col items-center w-full max-w-4xl">
-        {isGuessingPhase && currentVideo ? (
-          <>
-            <Timer
-              initialTime={timerInitialValue}
-              onTimeout={handleTimerTimeout}
-              isRunning={isTimerRunning}
-            />
-            <GuessingArea
-              options={shuffleArray([...currentVideo.options])} // Shuffle options each time
-              onGuess={handleGuess}
-              disabled={!isGuessingPhase || !isTimerRunning}
-            />
-          </>
-        ) : (
-          !gameEnded && (
-            <p className="text-white text-2xl mt-4 animate-pulse">
-              {videoStage === 0 ? "Watching the ad snippet..." : "Playing a hint..."}
-            </p>
-          )
+        {!gameEnded && (
+          <Timer
+            ref={timerRef}
+            initialTime={timerInitialValue}
+            onTimeout={handleRoundEndDueToTime}
+            isRunning={isTimerRunning}
+          />
+        )}
+
+        {currentVideo && !gameEnded && (
+          <GuessingArea
+            options={shuffleArray([...currentVideo.options])}
+            onGuess={handleGuess}
+            disabled={gameEnded || !isTimerRunning}
+          />
         )}
       </div>
     </div>

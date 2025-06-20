@@ -6,9 +6,9 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex flex-col items-center justify-center p-4 text-center">
       <div className="relative mb-12">
-        {/* AdVenture Guess Logo/Text */}
+        {/* AdGuessr Guess Logo/Text */}
         <h1 className="text-7xl font-extrabold text-white drop-shadow-lg leading-tight">
-          <span className="text-purple-500">Ad</span>Venture <span className="text-yellow-400">Guess</span>
+          <span className="text-purple-500">Ad</span>Guessr
         </h1>
         <p className="mt-4 text-2xl text-gray-300 font-semibold">
           Can you guess the ad from a snippet?
@@ -31,9 +31,9 @@ const Home = () => {
 
       {/* Optional: Add a small logo at the bottom */}
       <footer className="absolute bottom-4 text-gray-500 text-sm">
-        <p>&copy; 2025 AdVenture Guess. All rights reserved.</p>
+        <p>&copy; 2025 AdGuessr Guess. All rights reserved.</p>
         {/* Placeholder for a custom logo image */}
-        {/* <img src="/path/to/your/logo.png" alt="AdVenture Guess Logo" className="h-8 mx-auto mt-2" /> */}
+        {/* <img src="/path/to/your/logo.png" alt="AdGuessr Guess Logo" className="h-8 mx-auto mt-2" /> */}
       </footer>
     </div>
   );
